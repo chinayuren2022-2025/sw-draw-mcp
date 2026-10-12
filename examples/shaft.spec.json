@@ -1,0 +1,27 @@
+{
+  "units": "mm",
+  "name": "shaft",
+  "sketches": [
+    {
+      "name": "s1",
+      "plane": "front",
+      "entities": [
+        {"type": "centerline", "x1": 0, "y1": -2, "x2": 0, "y2": 62},
+        {"type": "line", "x1": 0, "y1": 0, "x2": 10, "y2": 0},
+        {"type": "line", "x1": 10, "y1": 0, "x2": 10, "y2": 20},
+        {"type": "line", "x1": 10, "y1": 20, "x2": 15, "y2": 20},
+        {"type": "line", "x1": 15, "y1": 20, "x2": 15, "y2": 50},
+        {"type": "line", "x1": 15, "y1": 50, "x2": 0, "y2": 60}
+      ],
+      "dims": [],
+      "relations": []
+    }
+  ],
+  "features": [
+    {"op": "revolve_boss", "sketch": "s1", "angle_deg": 360},
+    {"op": "chamfer", "distance_mm": 1, "angle_deg": 45, "chamfer_type": "angle_distance",
+     "edge_specs": {"type": "circle", "radius_mm": 10, "near_mm": [0, 0, 0]}}
+  ],
+  "checks": {},
+  "save": "shaft.SLDPRT"
+}

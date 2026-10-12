@@ -1,0 +1,133 @@
+[adv] RUN sketch_3d_text_tolerance
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[adv] PASS sketch_3d_text_tolerance
+[adv] RUN sweep_loft_boundary
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[adv] PASS sweep_loft_boundary
+[adv] RUN thicken_surface
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[adv] PASS thicken_surface
+[adv] RUN hole_rib_dome_wrap
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[adv] PASS hole_rib_dome_wrap
+[adv] RUN move_delete_scale
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[adv] PASS move_delete_scale
+[adv] RUN patterns_advanced
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[adv] PASS patterns_advanced
+[adv] RUN multibody
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[adv] PASS multibody
+[adv] RUN config_equations
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[adv] PASS config_equations
+[adv] RUN curves_surfaces_extra
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+{
+  "total": 9,
+  "passed": 9,
+  "failed": 0,
+  "results": [
+    {
+      "scenario": "sketch_3d_text_tolerance",
+      "ok": true,
+      "detail": {
+        "dim": true,
+        "tolerance": true,
+        "text": true,
+        "relation": true,
+        "delete_relation": true,
+        "3d_sketch": true,
+        "3d_line": true
+      }
+    },
+    {
+      "scenario": "sweep_loft_boundary",
+      "ok": true,
+      "detail": {
+        "sweep": true,
+        "loft": true,
+        "boundary": true
+      }
+    },
+    {
+      "scenario": "thicken_surface",
+      "ok": true,
+      "detail": {
+        "surface": true,
+        "thicken": true
+      }
+    },
+    {
+      "scenario": "hole_rib_dome_wrap",
+      "ok": true,
+      "detail": {
+        "boss": true,
+        "hole_wizard": true,
+        "rib": true,
+        "dome": true,
+        "wrap": {
+          "ok": true,
+          "value": true
+        }
+      }
+    },
+    {
+      "scenario": "move_delete_scale",
+      "ok": true,
+      "detail": {
+        "move_face": true,
+        "scale": true,
+        "delete_face": true
+      }
+    },
+    {
+      "scenario": "patterns_advanced",
+      "ok": true,
+      "detail": {
+        "sketch_driven": true,
+        "curve_driven": true,
+        "table_driven": true,
+        "fill": true
+      }
+    },
+    {
+      "scenario": "multibody",
+      "ok": true,
+      "detail": {
+        "combine": true,
+        "move_copy_body": {
+          "ok": true,
+          "value": true
+        }
+      }
+    },
+    {
+      "scenario": "config_equations",
+      "ok": true,
+      "detail": {
+        "config": "adv_test",
+        "list": [
+          "adv_test"
+        ],
+        "global_var": "X",
+        "rebuild": true
+      }
+    },
+    {
+      "scenario": "curves_surfaces_extra",
+      "ok": true,
+      "detail": {
+        "projected": true,
+        "split_line": true,
+        "curve_points": true,
+        "offset_surface": true,
+        "fill_surface": true
+      }
+    }
+  ]
+}
+[adv] PASS curves_surfaces_extra

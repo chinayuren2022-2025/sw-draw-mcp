@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "solidworks-draw": {
+      "command": "\\usr\\bin\\python3",
+      "args": [
+        "-X",
+        "utf8",
+        "\\home\\zjulin\\ai+sw\\sw-draw-skill\\scripts\\mcp_server.py"
+      ],
+      "env": {
+        "SW_DRAW_OUTPUT": "\\home\\zjulin\\ai+sw\\sw-draw-skill\\output"
+      }
+    }
+  }
+}

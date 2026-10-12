@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "solidworks-draw": {
+      "command": "D:\\FastProgram\\python\\python.exe",
+      "args": ["-X", "utf8", "D:\\sw-draw-skill\\scripts\\mcp_server.py"],
+      "env": {"SW_DRAW_OUTPUT": "D:\\sw-draw-skill\\output"}
+    }
+  }
+}

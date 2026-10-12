@@ -1,0 +1,8 @@
+{
+  "results": [
+    {"name": "fillet_constant", "status": "pass", "detail": "Simple=F0, Options=UniformRadius|Propagate, edges"},
+    {"name": "fillet_variable", "status": "pass", "detail": "VariableRadius=F1, Options=VarRadiusType|Propagate, radii_mm=[0.5,1.5]"},
+    {"name": "fillet_face", "status": "pass", "detail": "Face=F2, Options=AttachEdges|UniformRadius|Propagate, two face sets mark=4/2"},
+    {"name": "fillet_full_round", "status": "fail", "detail": "FullRound=F3, 三组面选择仍返回 None，需进一步验证几何/选择顺序"}
+  ]
+}

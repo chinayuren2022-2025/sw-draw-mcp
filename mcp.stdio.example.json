@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "solidworks-draw": {
+      "transport": "stdio",
+      "command": "D:\FastProgram\python.exe",
+      "args": ["-X", "utf8", "<解压目录>\sw-draw-skill\scripts\mcp_server.py"]
+    }
+  }
+}

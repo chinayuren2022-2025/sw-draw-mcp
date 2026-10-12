@@ -1,0 +1,233 @@
+[integration] RUN status
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[integration] PASS status
+[integration] RUN sketch_entities
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[integration] PASS sketch_entities
+[integration] RUN sketch_dims_relations
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[integration] PASS sketch_dims_relations
+[integration] RUN sketch_edit
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[integration] PASS sketch_edit
+[integration] RUN extrude_flange
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[integration] PASS extrude_flange
+[integration] RUN revolve
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[integration] PASS revolve
+[integration] RUN patterns_mirror
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[integration] PASS patterns_mirror
+[integration] RUN ref_geometry
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[integration] PASS ref_geometry
+[integration] RUN curves_surfaces
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[integration] PASS curves_surfaces
+[integration] RUN shell_draft_hole
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[integration] PASS shell_draft_hole
+[integration] RUN deep_check
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[integration] PASS deep_check
+[integration] RUN legacy_lens
+{
+  "intent": {
+    "type": "plano_convex",
+    "D": 25,
+    "f": 50,
+    "material": "BK7",
+    "tolerance": "standard"
+  },
+  "params": {
+    "type": "plano_convex",
+    "D": 25.0,
+    "f": 50,
+    "material": "BK7",
+    "n_d": 1.5168,
+    "R": 25.84,
+    "sag": 3.225,
+    "t_c": 4.23,
+    "t_e": 1.005,
+    "chamfer": 0.3,
+    "tolerance": "standard",
+    "density_g_cm3": 2.51
+  },
+  "messages": [
+    {
+      "level": "info",
+      "text": "R = f×(n-1) = 50×(1.5168-1) = 25.84mm（薄透镜近似，n_d=BK7）"
+    },
+    {
+      "level": "warn",
+      "text": "边缘厚度不足 1.0mm，中心厚度已加厚至 t_c=4.23mm"
+    }
+  ]
+}
+[integration] PASS legacy_lens
+[integration] RUN legacy_barrel
+[integration] PASS legacy_barrel
+{
+  "total": 13,
+  "passed": 13,
+  "failed": 0,
+  "results": [
+    {
+      "scenario": "status",
+      "ok": true,
+      "detail": {
+        "revision": "26.5.0",
+        "tlb_minor": 26
+      }
+    },
+    {
+      "scenario": "sketch_entities",
+      "ok": true,
+      "detail": {
+        "entities": {
+          "line": true,
+          "centerline": true,
+          "arc": true,
+          "circle": true,
+          "corner_rectangle": true,
+          "center_rectangle": true,
+          "ellipse": true,
+          "polygon": true,
+          "slot": true,
+          "point": true,
+          "spline": true
+        },
+        "segment_count": 28
+      }
+    },
+    {
+      "scenario": "sketch_dims_relations",
+      "ok": true,
+      "detail": {
+        "dim1": true,
+        "dim2": true,
+        "relation": true
+      }
+    },
+    {
+      "scenario": "sketch_edit",
+      "ok": true,
+      "detail": {
+        "offset": true
+      }
+    },
+    {
+      "scenario": "extrude_flange",
+      "ok": true,
+      "detail": {
+        "volume_mm3": 900.7522,
+        "steps": [
+          "sketch:sk1->草图1",
+          "feature[0]:extrude_boss->凸台-拉伸1",
+          "feature[1]:fillet->圆角1",
+          "feature[2]:simple_hole->孔1"
+        ]
+      }
+    },
+    {
+      "scenario": "revolve",
+      "ok": true,
+      "detail": {
+        "volume_mm3": 680.6784
+      }
+    },
+    {
+      "scenario": "patterns_mirror",
+      "ok": true,
+      "detail": {
+        "boss": true,
+        "linear": true,
+        "circular": true,
+        "mirror": true
+      }
+    },
+    {
+      "scenario": "ref_geometry",
+      "ok": true,
+      "detail": {
+        "plane": "基准面1",
+        "axis": "基准轴1",
+        "point": true
+      }
+    },
+    {
+      "scenario": "curves_surfaces",
+      "ok": true,
+      "detail": {
+        "helix": true,
+        "surface": true
+      }
+    },
+    {
+      "scenario": "shell_draft_hole",
+      "ok": true,
+      "detail": {
+        "shell": true,
+        "draft": true
+      }
+    },
+    {
+      "scenario": "deep_check",
+      "ok": true,
+      "detail": {
+        "summary": "共发现 1 类问题"
+      }
+    },
+    {
+      "scenario": "legacy_lens",
+      "ok": true,
+      "detail": {
+        "intent": {
+          "type": "plano_convex",
+          "D": 25,
+          "f": 50,
+          "material": "BK7",
+          "tolerance": "standard"
+        },
+        "params": {
+          "type": "plano_convex",
+          "D": 25.0,
+          "f": 50,
+          "material": "BK7",
+          "n_d": 1.5168,
+          "R": 25.84,
+          "sag": 3.225,
+          "t_c": 4.23,
+          "t_e": 1.005,
+          "chamfer": 0.3,
+          "tolerance": "standard",
+          "density_g_cm3": 2.51
+        },
+        "messages": [
+          {
+            "level": "info",
+            "text": "R = f×(n-1) = 50×(1.5168-1) = 25.84mm（薄透镜近似，n_d=BK7）"
+          },
+          {
+            "level": "warn",
+            "text": "边缘厚度不足 1.0mm，中心厚度已加厚至 t_c=4.23mm"
+          }
+        ]
+      }
+    },
+    {
+      "scenario": "legacy_barrel",
+      "ok": true,
+      "detail": [
+        13.5,
+        12.55,
+        11.5,
+        3.0,
+        8.0
+      ]
+    }
+  ]
+}

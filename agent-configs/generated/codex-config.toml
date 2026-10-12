@@ -1,0 +1,4 @@
+# Codex MCP 配置（复制到 ~/.codex/config.toml 或项目 .codex/config.toml）
+[mcp_servers.solidworks-draw]
+command = "\usr\bin\python3"
+args = ["-X", "utf8", "\home\zjulin\ai+sw\sw-draw-skill\scripts\mcp_server.py"]

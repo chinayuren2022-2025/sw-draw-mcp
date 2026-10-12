@@ -1,0 +1,166 @@
+[asm] RUN setup_parts
+[asm] PASS setup_parts
+[asm] RUN mates_coincident_distance
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[asm] PASS mates_coincident_distance
+[asm] RUN mates_parallel_distance
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[asm] PASS mates_parallel_distance
+[asm] RUN component_state
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[asm] PASS component_state
+[asm] RUN patterns_components
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[asm] PASS patterns_components
+[asm] RUN checks
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[asm] PASS checks
+[asm] RUN assembly_cut
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[asm] PASS assembly_cut
+[asm] RUN mate_reference
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[asm] PASS mate_reference
+[asm] RUN virtual_part
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[asm] PASS virtual_part
+[asm] RUN replace_delete
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[asm] PASS replace_delete
+{
+  "total": 10,
+  "passed": 10,
+  "failed": 0,
+  "results": [
+    {
+      "scenario": "setup_parts",
+      "ok": true,
+      "detail": {
+        "parts": [
+          "\\\\wsl.localhost\\Ubuntu-24.04\\home\\zjulin\\ai+sw\\sw-draw-skill\\output\\asm_block.SLDPRT",
+          "\\\\wsl.localhost\\Ubuntu-24.04\\home\\zjulin\\ai+sw\\sw-draw-skill\\output\\asm_pin.SLDPRT"
+        ]
+      }
+    },
+    {
+      "scenario": "mates_coincident_distance",
+      "ok": true,
+      "detail": {
+        "mate": "重合1",
+        "err": 1,
+        "mates": [
+          "重合1"
+        ],
+        "suppress": true,
+        "delete": true
+      }
+    },
+    {
+      "scenario": "mates_parallel_distance",
+      "ok": true,
+      "detail": {
+        "distance": [
+          "LimitDistance1",
+          1
+        ],
+        "parallel": [
+          "平行1",
+          1
+        ]
+      }
+    },
+    {
+      "scenario": "component_state",
+      "ok": true,
+      "detail": {
+        "fixed": true,
+        "fix": true,
+        "fixed2": true,
+        "vis": true,
+        "vis2": true,
+        "suppress": true,
+        "resolve": true,
+        "move": true
+      }
+    },
+    {
+      "scenario": "patterns_components",
+      "ok": true,
+      "detail": {
+        "linear": true,
+        "mirror": true
+      }
+    },
+    {
+      "scenario": "checks",
+      "ok": true,
+      "detail": {
+        "interference": {
+          "ok": false,
+          "interference_count": 1,
+          "message": "COM 干涉接口不可用，已回退包围盒初筛（仅参考，非精确干涉）",
+          "bbox_overlaps": [
+            {
+              "component_a": "asm_block-1",
+              "component_b": "asm_block-2",
+              "box_a_m": [
+                0.0,
+                0.0,
+                0.0,
+                0.02,
+                0.01,
+                0.005
+              ],
+              "box_b_m": [
+                0.0,
+                0.0,
+                0.0,
+                0.02,
+                0.01,
+                0.005
+              ]
+            }
+          ]
+        },
+        "mass": {
+          "volume_m3": 2.0000000000000003e-06,
+          "mass_kg": 0.0020000000000000005
+        },
+        "rebuild": true
+      }
+    },
+    {
+      "scenario": "assembly_cut",
+      "ok": true,
+      "detail": {
+        "cut": true
+      }
+    },
+    {
+      "scenario": "mate_reference",
+      "ok": true,
+      "detail": {
+        "mate_reference": true
+      }
+    },
+    {
+      "scenario": "virtual_part",
+      "ok": true,
+      "detail": {
+        "virtual": true,
+        "saved": null
+      }
+    },
+    {
+      "scenario": "replace_delete",
+      "ok": true,
+      "detail": {
+        "replace": true,
+        "delete": true,
+        "components": [
+          "asm_pin-2"
+        ]
+      }
+    }
+  ]
+}

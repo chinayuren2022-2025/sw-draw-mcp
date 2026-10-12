@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "solidworks-draw": {
+      "url": "http://<执行节点IP>:8711/sse"
+    }
+  }
+}

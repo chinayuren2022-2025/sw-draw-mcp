@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "name": "fillet_variable",
+      "status": "fail",
+      "error": "SelectError(\"未找到可选择的边: {'kind': 'edge', 'type': 'line', 'length_mm': 30.0}\")"
+    },
+    {
+      "name": "fillet_face",
+      "status": "fail",
+      "error": "RuntimeError('fillet(type=face, r=0.001): 所有候选方法/签名均失败: fillet(type=face, r=0.001): FeatureFillet3 所有候选签名均失败: fillet(type=face, r=0.001): FeatureFillet3 返回 None')"
+    },
+    {
+      "name": "fillet_full_round",
+      "status": "fail",
+      "error": "RuntimeError('full_round_fillet: 所有候选方法/签名均失败: full_round_fillet: FeatureFillet 所有候选签名均失败: full_round_fillet: FeatureFillet 返回 None')"
+    },
+    {
+      "name": "flex_bending",
+      "status": "fail",
+      "error": "RuntimeError('flex(type=bending, value=30): InsertFlexFeature 所有候选签名均失败: flex(type=bending, value=30): InsertFlexFeature 返回 None')"
+    },
+    {
+      "name": "add_mate4_5_smoke",
+      "status": "fail",
+      "error": "RuntimeError('add_mate_full(mate_type=coincident, align=closest): 无法选择配合实体 <win32com.gen_py.SldWorks 2018 Type Library.IComponent2 instance at 0x1723909237328>')"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+# 可选：启用 drawing_interpret/compare 的 OpenCV 深度识别时安装
+# 默认不需要，插件核心功能不依赖 OpenCV
+opencv-python-headless>=4.0

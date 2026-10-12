@@ -1,0 +1,25 @@
+[adv] RUN hole_rib_dome_wrap
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+[sw_core] 已启动新 SolidWorks 实例 (SldWorks.Application)
+{
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "results": [
+    {
+      "scenario": "hole_rib_dome_wrap",
+      "ok": true,
+      "detail": {
+        "boss": true,
+        "hole_wizard": true,
+        "rib": true,
+        "dome": true,
+        "wrap": {
+          "ok": true,
+          "value": true
+        }
+      }
+    }
+  ]
+}
+[adv] PASS hole_rib_dome_wrap

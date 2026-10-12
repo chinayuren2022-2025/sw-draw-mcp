@@ -1,0 +1,19 @@
+{
+  "units": "mm",
+  "name": "spring",
+  "sketches": [
+    {
+      "name": "circle_sk",
+      "plane": "top",
+      "entities": [{"type": "circle", "cx": 10, "cy": 0, "r": 1.5}],
+      "dims": [],
+      "relations": []
+    }
+  ],
+  "features": [
+    {"op": "helix", "circle_sketch": "circle_sk", "height_mm": 40, "pitch_mm": 8,
+     "revolutions": 5, "start_angle_deg": 0, "clockwise": false, "taper_deg": 0}
+  ],
+  "checks": {},
+  "save": "spring_curve.SLDPRT"
+}

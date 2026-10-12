@@ -1,0 +1,49 @@
+{
+  "name": "mm25_p1_1",
+  "units": "mm",
+  "output": "\\\\wsl.localhost\\Ubuntu-24.04\\home\\zjulin\\ai+sw\\sw-draw-skill\\output\\mm25_p1_1.SLDPRT",
+  "sketches": [
+    {
+      "id": "base",
+      "name": "base_sk",
+      "plane": "front",
+      "entities": [
+        {"type": "arc3pt", "p1": [25, -30], "p2": [25, 30], "mid": [-5, 0]},
+        {"type": "line", "p1": [25, 30], "p2": [125, 30]},
+        {"type": "arc3pt", "p1": [125, 30], "p2": [125, -30], "mid": [155, 0]},
+        {"type": "line", "p1": [125, -30], "p2": [25, -30]}
+      ]
+    },
+    {
+      "id": "h40",
+      "name": "h40_sk",
+      "plane": "front",
+      "entities": [
+        {"type": "circle", "center": [25, 0], "r": 20},
+        {"type": "circle", "center": [125, 0], "r": 20}
+      ]
+    },
+    {
+      "id": "pocket",
+      "name": "pocket_sk",
+      "plane": "front",
+      "entities": [
+        {"type": "line", "p1": [50, 25], "p2": [100, 25]},
+        {"type": "arc3pt", "p1": [100, 25], "p2": [100, -25], "mid": [90, 0]},
+        {"type": "line", "p1": [100, -25], "p2": [50, -25]},
+        {"type": "arc3pt", "p1": [50, -25], "p2": [50, 25], "mid": [60, 0]}
+      ]
+    }
+  ],
+  "features": [
+    {"id": "base", "op": "extrude_boss", "sketch": "base", "depth_mm": 100},
+    {"id": "h40", "op": "extrude_cut", "sketch": "h40", "depth_mm": 100},
+    {"id": "front_pocket", "op": "extrude_cut", "sketch": "pocket", "depth_mm": 20},
+    {"id": "back_pocket", "op": "mirror_feature", "seed": "front_pocket",
+     "plane_offset": {"name": "midplane", "base": "front", "distance_mm": 50}},
+    {"id": "hole35", "op": "simple_hole",
+     "face": {"kind": "plane", "normal": [0, 1, 0]},
+     "diameter_mm": 35, "depth_mm": 60, "position_mm": [75, 50]},
+    {"id": "fillet", "op": "fillet_all", "radius_mm": 2}
+  ]
+}

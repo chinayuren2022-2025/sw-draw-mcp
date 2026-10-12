@@ -1,0 +1,45 @@
+{
+  "results": [
+    {
+      "scenario": "drawing_spec_mm25",
+      "ok": true,
+      "detail": {
+        "saved": "\\\\wsl.localhost\\Ubuntu-24.04\\home\\zjulin\\ai+sw\\sw-draw-skill\\output\\mm25_p1_1.SLDPRT",
+        "features": {
+          "base": "凸台-拉伸1",
+          "h40": "切除-拉伸1",
+          "front_pocket": "切除-拉伸2",
+          "back_pocket": "镜向1",
+          "hole35": "孔1",
+          "fillet": "圆角1"
+        },
+        "results": {
+          "base": {
+            "feature": "凸台-拉伸1",
+            "sketch": "base_sk"
+          },
+          "h40": {
+            "feature": "切除-拉伸1",
+            "sketch": "h40_sk"
+          },
+          "front_pocket": {
+            "feature": "切除-拉伸2",
+            "sketch": "pocket_sk"
+          },
+          "back_pocket": {
+            "feature": "镜向1",
+            "plane": "基准面1"
+          },
+          "hole35": {
+            "feature": "孔1"
+          },
+          "fillet": {
+            "feature": "圆角1"
+          }
+        }
+      }
+    }
+  ],
+  "failed": 0,
+  "strict": true
+}

@@ -1,0 +1,86 @@
+{
+  "results": [
+    {
+      "scenario": "fillet_fix",
+      "ok": true,
+      "detail": {
+        "constant": "圆角1",
+        "variable": "变化圆角1",
+        "face": "圆角2"
+      }
+    },
+    {
+      "scenario": "cosmetic_thread",
+      "ok": true,
+      "detail": {
+        "feature": "装饰螺纹线1",
+        "type": "CosmeticThread"
+      }
+    },
+    {
+      "scenario": "feature_tree",
+      "ok": true,
+      "detail": {
+        "renamed": {
+          "feature": "test_cut"
+        },
+        "reordered": {
+          "feature": "test_cut",
+          "after": "凸台-拉伸1"
+        },
+        "rollback": {
+          "rolled_back_to": "test_cut"
+        },
+        "rollforward": {
+          "rolled_forward": true
+        }
+      }
+    },
+    {
+      "scenario": "appearance_scene",
+      "ok": true,
+      "detail": {
+        "appearance": {
+          "material_property_values": [
+            0.8,
+            0.2,
+            0.1,
+            1.0,
+            1.0,
+            0.88,
+            0.21,
+            0.0,
+            0.21
+          ]
+        },
+        "scene": {
+          "scene": "Plain White"
+        }
+      }
+    },
+    {
+      "scenario": "dimxpert",
+      "ok": true,
+      "detail": {
+        "before": {
+          "feature_count": 0,
+          "annotation_count": 0
+        },
+        "added": {
+          "op": "InsertSizeDimension",
+          "returned": false,
+          "feature_count": 3,
+          "annotation_count": 1
+        }
+      }
+    },
+    {
+      "scenario": "subassembly",
+      "ok": false,
+      "error": "RuntimeError: insert_subassembly(path='\\\\\\\\wsl.localhost\\\\Ubuntu-24.04\\\\home\\\\zjulin\\\\ai+sw\\\\sw-draw-skill\\\\output\\\\bridge_asm.SLDASM'): insert_component_full(config_option=use_existing): 插入零部件失败: \\\\wsl.localhost\\Ubuntu-24.04\\home\\zjulin\\ai+sw\\sw-draw-skill\\output\\bridge_asm.SLDASM",
+      "trace": "Traceback (most recent call last):\n  File \"\\\\wsl.localhost\\Ubuntu-24.04\\home\\zjulin\\ai+sw\\sw-draw-skill\\scripts\\sw_assembly_full.py\", line 1453, in insert_subassembly\n    return insert_component_full(asm, path, config_option=\"use_existing\",\n                                 config_name=config_name, x=x, y=y, z=z)\n  File \"\\\\wsl.localhost\\Ubuntu-24.04\\home\\zjulin\\ai+sw\\sw-draw-skill\\scripts\\sw_assembly_full.py\", line 586, in insert_component_full\n    raise RuntimeError(f\"{desc}: 插入零部件失败: {path}\")\nRuntimeError: insert_component_full(config_option=use_existing): 插入零部件失败: \\\\wsl.localhost\\Ubuntu-24.04\\home\\zjulin\\ai+sw\\sw-draw-skill\\output\\bridge_asm.SLDASM\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"\\\\wsl.localhost\\Ubuntu-24.04\\home\\zjulin\\ai+sw\\sw-draw-skill\\scripts\\tests\\integration_extended.py\", line 28, in _run\n    detail = fn()\n  File \"\\\\wsl.localhost\\Ubuntu-24.04\\home\\zjulin\\ai+sw\\sw-draw-skill\\scripts\\tests\\integration_extended.py\", line 106, in s_subassembly\n    c = sw_assembly_full.insert_subassembly(top, sub, x=0.01, y=0, z=0)\n  File \"\\\\wsl.localhost\\Ubuntu-24.04\\home\\zjulin\\ai+sw\\sw-draw-skill\\scripts\\sw_assembly_full.py\", line 1456, in insert_subassembly\n    raise RuntimeError(f\"{desc}: {exc}\") from exc\nRuntimeError: insert_subassembly(path='\\\\\\\\wsl.localhost\\\\Ubuntu-24.04\\\\home\\\\zjulin\\\\ai+sw\\\\sw-draw-skill\\\\output\\\\bridge_asm.SLDASM'): insert_component_full(config_option=use_existing): 插入零部件失败: \\\\wsl.localhost\\Ubuntu-24.04\\home\\zjulin\\ai+sw\\sw-draw-skill\\output\\bridge_asm.SLDASM\n"
+    }
+  ],
+  "failed": 1,
+  "strict": true
+}
