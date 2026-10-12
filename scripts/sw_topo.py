@@ -95,11 +95,16 @@ def find_named(model, name, kind=None):
 
 
 def name_entity(model, entity, name):
-    """给零件实体命名（随零件保存）。重名时 SW 返回 False。"""
+    """给零件实体命名（随零件保存）。一个实体只能有一个名字，名字在零件内唯一。"""
     part = sw_core._early(model, "IPartDoc")
-    ok = bool(part.SetEntityName(entity, str(name)))
-    if not ok:
-        raise RefError(f"SetEntityName({name!r}) 失败：名字可能已被其他实体占用")
+    current = entity_name(model, entity)
+    if current == str(name):
+        return True
+    if current:
+        raise RefError(f"该实体已命名为 {current!r}（一个实体只能有一个名字），"
+                       f"装配中请直接引用 {current!r}")
+    if not bool(part.SetEntityName(entity, str(name))):
+        raise RefError(f"SetEntityName({name!r}) 失败：名字已被零件中其他实体占用")
     return True
 
 
@@ -308,6 +313,8 @@ def measure_selection(model):
         if v == -1:
             continue
         out[key] = round(math.degrees(v), 4) if scale is None else round(v * scale, 4)
+    if "diameter_mm" in out and "radius_mm" not in out:
+        out["radius_mm"] = round(out["diameter_mm"] / 2.0, 4)
     for attr, key in (("IsParallel", "parallel"), ("IsPerpendicular", "perpendicular"),
                       ("IsIntersect", "intersect")):
         try:

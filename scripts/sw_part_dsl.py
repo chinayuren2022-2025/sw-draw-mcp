@@ -18,6 +18,8 @@ spec v1 示例：
   "features": [
     {"op": "extrude_boss", "sketch": "sk1", "depth_mm": 5}
   ],
+  "names": [{"name": "TOP", "ref": {"spec": {"kind": "plane", "normal": [0, 0, 1],
+                                              "directional": true}}}],
   "checks": {"expect_volume_mm3": 1000.0},
   "save": "out/part.SLDPRT"
 }
@@ -25,7 +27,9 @@ spec v1 示例：
 设计约定：
   - 所有 *_mm 字段为毫米，执行层转米；
   - sketch 名称映射：创建后捕获 SW 实际草图名，后续 feature 用 spec 中的逻辑名；
-  - 特征 op 与 sw_features / sw_advanced 函数一一对应（ops_available() 可查询）。
+  - 特征 op 与 sw_features / sw_advanced 函数一一对应（ops_available() 可查询）；
+  - names：特征完成后给面/边命名（ref 同 sw_topo.resolve），供装配按
+    {"component":..,"face":name} 稳定引用。
 """
 import json
 import os
@@ -154,7 +158,8 @@ _FEATURE_OPS = {
     "dimxpert_delete_tolerances": ("sw_annotate", "dimxpert_delete_tolerances", {}),
 }
 
-_ALLOWED_KEYS = {"units", "name", "planes", "sketches", "features", "checks", "save"}
+_ALLOWED_KEYS = {"units", "name", "planes", "sketches", "features", "names", "checks",
+                 "save"}
 
 
 class SpecError(ValueError):
@@ -216,6 +221,14 @@ def validate_spec(spec):
         sk = f.get("sketch")
         if sk and sketch_names and sk not in sketch_names:
             errors.append(f"features[{i}] sketch={sk!r} 未在 sketches 中定义")
+    seen_names = set()
+    for i, n in enumerate(spec.get("names") or []):
+        if not isinstance(n, dict) or not n.get("name") or not isinstance(n.get("ref"), dict):
+            errors.append(f"names[{i}] 需要 {{name, ref}}，ref 为 spec/ray/index/persist_id 之一")
+            continue
+        if n["name"] in seen_names:
+            errors.append(f"names[{i}] 名字重复: {n['name']}")
+        seen_names.add(n["name"])
     checks = spec.get("checks") or {}
     if "expect_volume_mm3" in checks:
         try:
@@ -402,7 +415,17 @@ def build_part(spec, out_path=None, sw=None, do_checks=True):
         feat = _apply_feature(mod, model, f, sketch_names)
         report["steps"].append(f"feature[{i}]:{f['op']}->{getattr(feat, 'Name', feat)}")
 
-    # 4. 校验与保存
+    # 4. 实体命名（装配稳定引用）
+    if normalized.get("names"):
+        import sw_topo
+        report["names"] = {}
+        for n in normalized["names"]:
+            ent, kind = sw_topo.resolve(model, n["ref"])
+            sw_topo.name_entity(model, ent, n["name"])
+            report["names"][n["name"]] = kind
+        report["steps"].append(f"names:{sorted(report['names'])}")
+
+    # 5. 校验与保存
     if do_checks:
         mp = sw_core.mass_properties(model)
         report["volume_mm3_sw"] = round(mp["volume_m3"] * 1e9, 4)
