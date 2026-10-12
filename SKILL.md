@@ -25,7 +25,17 @@ description: 自然语言驱动本机 SolidWorks 参数化建模（平凸透镜/
 - 首次运行已生成 COM 早绑定缓存（见 README 安装第 3 步）
 - SolidWorks 已打开（推荐）或允许脚本启动新实例
 
-## MCP 工具（19 个）
+## MCP 工具（20 个基础 + 28 个 v2 闭环工具）
+
+v2 闭环工具（文档/截图/特征树/尺寸/拓扑/命名/测量/装配配合/检查）的参数、引用写法与推荐工作流见
+`docs/MCP_TOOLS.md`。要点：
+
+- 装配配合前先在零件里给配合面命名（`entity_name`，或 part_build spec 的 `"names"`），
+  装配中用 `{"component":"pin-1","face":"PIN_CYL"}` 引用，不靠坐标猜面。
+- `asm_mate` 返回两端组件的约束状态和剩余自由度，冲突配合会自动回滚；收尾用 `asm_check`。
+- 每步改完用 `view_capture` 看图、`measure` / `mass_properties` 验数值。
+
+基础工具：
 
 | 工具 | 作用 |
 |---|---|
@@ -63,6 +73,8 @@ description: 自然语言驱动本机 SolidWorks 参数化建模（平凸透镜/
      "relations": [{"type": "horizontal", "targets": [0]}]}
   ],
   "features": [{"op": "extrude_boss", "sketch": "sk1", "depth_mm": 5}],
+  "names": [{"name": "TOP", "ref": {"spec": {"kind": "plane", "normal": [0,0,1],
+                                              "directional": true}}}],
   "save": "flange.SLDPRT"
 }
 ```
@@ -91,6 +103,8 @@ python scripts/sw_sketch_check.py --file output/lens.SLDPRT [--fix]
 - 三套实机测试：`integration_sw2018.py`（基础 13）、`integration_part_advanced.py`（高级 9）、`integration_assembly.py`（装配 10）。
 - 读图建模实机回归：`scripts/tests/integration_drawing.py`（mm25 drawing_spec 全流程）。
 - 扩展功能实机回归：`scripts/tests/integration_extended.py`（装饰螺纹/特征树/DimXpert/子装配体）。
+- v2 闭环回归：`integration_asm_ref.py <dir>`（命名面配合/自由度/回滚，20 项），再跑
+  `integration_mcp_v2.py <dir>`（MCP 工具冒烟，25 项）。
 
 ## 知识库
 

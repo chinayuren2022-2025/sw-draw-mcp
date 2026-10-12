@@ -6,6 +6,14 @@
       / part_spec_dry_run / part_build / feature_create / ref_geometry_create
       / sketch_create / part_inspect / drawing_ingest / drawing_build
       / drawing_compare / annotation_create / subassembly_manage
+v2（闭环：看 → 稳定引用 → 操作 → 验证）：
+  文档   doc_list / doc_open / doc_save / doc_close / doc_export / view_capture
+  特征   feature_list / feature_suppress / feature_delete / undo
+         / dimension_list / dimension_set / custom_properties
+  拓扑   part_topology / entity_name / measure / mass_properties
+  装配   asm_new / asm_insert / asm_components / asm_component_faces / asm_mate
+         / asm_mates / asm_mate_edit / asm_mate_delete / asm_mate_suppress
+         / asm_move / asm_fix / asm_check
 
 所有几何计算/建模由 scripts/ 下的 Python 模块确定性执行，本层只做
 进程内编排 + JSON 透传，客户端 LLM 只需提取参数字段。

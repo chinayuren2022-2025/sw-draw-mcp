@@ -7,6 +7,12 @@
 全部几何计算/建模由 Python 确定性执行，LLM（DeepSeek 等）只负责理解
 自然语言并提取参数。
 
+**v2 闭环工具（48 个 MCP 工具）**：AI 不再靠坐标猜面——
+零件里给面命名 / 拿持久 ID → 装配中按"组件 + 面名"配合 → 每次配合返回约束状态与
+剩余自由度，冲突自动回滚 → `asm_check` 查欠定义/过定义/干涉 → `view_capture`
+直接把截图返回给 AI 看。另有特征树、尺寸读改、测量、质量属性、导出、撤销等。
+工具清单与引用写法见 `docs/MCP_TOOLS.md`。
+
 ## 运行环境（硬要求）
 
 | 项 | 要求 | 备注 |
@@ -145,14 +151,20 @@ sw-draw-skill/
    ├─ drawing_interpret.py 视图理解（轮廓/圆/剖面线 + 特征假设）
    ├─ drawing_spec.py      drawing_spec 确定性建模器
    ├─ model_view_compare.py 模型视图 vs 图纸视图差异检测
-   ├─ mcp_server.py        MCP server（19 工具：12 零件 + 装配 4 + 读图 3）
+   ├─ sw_topo.py           拓扑查询 / 持久 ID / 实体命名 / 测量 / 质量属性
+   ├─ sw_asm_ref.py        装配引用（组件+面名）/ 闭环配合 / 自由度 / 干涉检查
+   ├─ sw_doc.py            文档 / 截图 / 特征树 / 尺寸 / 自定义属性 / 导出
+   ├─ mcp_server.py        MCP server（20 基础工具 + 28 个 v2 闭环工具）
    └─ tests/               纯 Python 单测（WSL 可跑）+ SW2018 实机集成测试
 ```
 
 ## 已知限制（SW2018）
 
 - 平凸透镜/镜筒为专用模板；通用零件请使用 `part_build` spec DSL
-- 装配为两件套（concentric + distance），超出范围需显式 spec
+- `assemble` 为两件套自动推导（concentric + distance）；任意装配用 v2 的
+  `asm_insert` / `asm_mate` 逐步配合，或 `assembly_build` 显式 spec
+- `asm_mate` 按特征名选实体时，组件基准面/轴可直接用；面/边须先在零件中命名或用 persist_id
+- IModeler 临时实体（CreateBodyFromBox3 等）在 pywin32 下不可用（数组封送问题），未封装
 - 特征层各 API 的 COM 签名以 SW2018 TLB v26 为准；实机已验证四套集成测试
   （基础 13 场景 / 高级零件 9 场景 / 装配体 10 场景 / 读图建模 mm25 /
   扩展功能 5 场景）。
@@ -175,4 +187,8 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File "<sw-draw-skill>\bridge\run_adv_pa
 pwsh -NoProfile -ExecutionPolicy Bypass -File "<sw-draw-skill>\bridge\run_asm.ps1"
 pwsh -NoProfile -ExecutionPolicy Bypass -File "<sw-draw-skill>\bridge\run_drawing.ps1"
 pwsh -NoProfile -ExecutionPolicy Bypass -File "<sw-draw-skill>\bridge\cleanup_sw.ps1"
+
+:: v2 闭环工具实机回归（Windows 直接跑，SW 需已打开）
+python scripts\tests\integration_asm_ref.py D:\tmp\it
+python scripts\tests\integration_mcp_v2.py D:\tmp\it
 ```
