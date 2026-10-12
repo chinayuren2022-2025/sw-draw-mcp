@@ -33,24 +33,47 @@ import sw_sel
 # 常量映射（来源：SW2018 API swconst；0/1/5/6 已实测，其余待实测）
 # ---------------------------------------------------------------------------
 
-# swMateType_e：配合类型
+# swMateType_e：配合类型。数值取自 SW2018 自带 SolidWorks.Interop.swconst.dll
+# 反射结果（旧表 9 以后整体错位，如 hinge=16 实为 LOCK）。
 MATE_TYPES = {
-    "coincident": 0,      # 重合（SW2018 v26 已实测）
-    "concentric": 1,      # 同轴心（SW2018 v26 已实测）
-    "perpendicular": 2,   # 垂直（待实测）
-    "parallel": 3,        # 平行（待实测）
-    "tangent": 4,         # 相切（待实测）
-    "distance": 5,        # 距离（SW2018 v26 已实测）
-    "angle": 6,           # 角度（SW2018 v26 已实测）
-    "symmetric": 8,       # 对称（待实测）
-    "width": 9,           # 宽度（待实测）
-    "path": 10,           # 路径（待实测）
-    "gear": 11,           # 齿轮（待实测）
-    "lock": 12,           # 锁定（待实测）
-    "linear_coupler": 13, # 线性耦合器（待实测）
-    "profile_center": 14, # 轮廓中心（待实测）
-    "slot": 15,           # 槽口（待实测）
-    "hinge": 16,          # 铰链（待实测）
+    "coincident": 0,       # 重合（SW2018 v26 已实测）
+    "concentric": 1,       # 同轴心（SW2018 v26 已实测）
+    "perpendicular": 2,    # 垂直
+    "parallel": 3,         # 平行
+    "tangent": 4,          # 相切
+    "distance": 5,         # 距离（SW2018 v26 已实测）
+    "angle": 6,            # 角度（SW2018 v26 已实测）
+    "symmetric": 8,        # 对称（需第三个选择：对称面，mark=1）
+    "cam_follower": 9,     # 凸轮推杆
+    "gear": 10,            # 齿轮
+    "width": 11,           # 宽度
+    "lock_to_sketch": 12,  # 锁定到草图
+    "rack_pinion": 13,     # 齿条小齿轮
+    "path": 15,            # 路径
+    "lock": 16,            # 锁定
+    "screw": 17,           # 螺旋
+    "linear_coupler": 18,  # 线性/线性耦合器
+    "universal_joint": 19, # 万向节
+    "coordinate": 20,      # 坐标系
+    "slot": 21,            # 槽口
+    "hinge": 22,           # 铰链
+    "slider": 23,          # 滑块
+    "profile_center": 24,  # 轮廓中心
+    "magnetic": 25,        # 磁力
+}
+
+# swAddMateError_e：AddMate 返回的错误码
+ADD_MATE_ERRORS = {
+    0: "未知错误", 1: "无错误", 2: "配合类型与所选实体不匹配",
+    3: "对齐方式不正确", 4: "所选实体不正确（类型/数量不对）",
+    5: "装配体过定义（与已有配合冲突）", 6: "齿轮比不正确",
+}
+
+# swConstrainedStatus_e：零部件约束状态
+CONSTRAINED_STATUS = {
+    1: "unknown", 2: "under_constrained", 3: "fully_constrained",
+    4: "over_constrained", 5: "no_solution", 6: "invalid_solution",
+    7: "autosolve_off",
 }
 
 # swMateAlign_e：配合对齐
@@ -261,6 +284,9 @@ def _select_named_entity(asm, spec, desc, append=False, mark=0, default_type="FA
     """装配体中按 spec 选择实体：对象 / name+type dict / 字符串名。"""
     if spec is None:
         return False
+    if isinstance(spec, dict) and spec.get("component"):
+        import sw_asm_ref  # 组件级引用：{"component": "pin-1", "face": "HOLE"} 等
+        return sw_asm_ref.select_ref(asm, spec, append=append, mark=mark)
     if isinstance(spec, dict):
         name = spec.get("name")
         if name:
@@ -323,13 +349,13 @@ def _norm_list(items):
 # ---------------------------------------------------------------------------
 
 def mate_types():
-    """返回配合类型映射 dict（swMateType_e，0/1/5/6 已实测，其余待实测）。"""
+    """返回配合类型映射 dict（swMateType_e，取自 SW2018 swconst）。"""
     return dict(MATE_TYPES)
 
 
 def add_mate_full(asm, face1, face2, mate_type, align="closest", flip=False,
-                  distance_m=0, angle_deg=0, dist_upper_m=0, dist_lower_m=0,
-                  angle_upper_deg=0, angle_lower_deg=0, gear_num=1, gear_den=1,
+                  distance_m=0, angle_deg=0, dist_upper_m=None, dist_lower_m=None,
+                  angle_upper_deg=None, angle_lower_deg=None, gear_num=1, gear_den=1,
                   lock_rotation=False, positioning_only=False, width_option=0):
     """添加配合（AddMate3/4/5 多版本回退），返回 (mate_feature, error_code)。
 
@@ -341,8 +367,9 @@ def add_mate_full(asm, face1, face2, mate_type, align="closest", flip=False,
         flip: 是否翻转。
         distance_m: 距离（米，API 内部单位）。
         angle_deg: 角度（度）。
-        dist_upper_m / dist_lower_m: 距离上下限（米）。
-        angle_upper_deg / angle_lower_deg: 角度上下限（度）。
+        dist_upper_m / dist_lower_m: 距离上下限（米）。缺省等于 distance_m；
+            与 distance_m 不同时 SW 会建成"极限距离"配合（LimitDistance）。
+        angle_upper_deg / angle_lower_deg: 角度上下限（度）。缺省等于 angle_deg。
         gear_num / gear_den: 齿轮比分子/分母。
         lock_rotation: AddMate4 的 LockRotation。
         width_option: AddMate5 的 WidthMateOption。
@@ -390,7 +417,29 @@ def add_mate_full(asm, face1, face2, mate_type, align="closest", flip=False,
             if not ok:
                 raise RuntimeError(f"{desc}: 无法选择配合实体 {face!r}")
 
-    base = (type_code, align_code, bool(flip), float(distance_m),
+    return add_mate_selected(
+        asm, type_code, align_code, flip=flip, distance_m=distance_m, angle_deg=angle_deg,
+        dist_upper_m=dist_upper_m, dist_lower_m=dist_lower_m,
+        angle_upper_deg=angle_upper_deg, angle_lower_deg=angle_lower_deg,
+        gear_num=gear_num, gear_den=gear_den, lock_rotation=lock_rotation,
+        positioning_only=positioning_only, width_option=width_option, desc=desc)
+
+
+def add_mate_selected(asm, type_code, align_code, flip=False, distance_m=0, angle_deg=0,
+                      dist_upper_m=None, dist_lower_m=None, angle_upper_deg=None,
+                      angle_lower_deg=None,
+                      gear_num=1, gear_den=1, lock_rotation=False, positioning_only=False,
+                      width_option=0, desc="add_mate_selected"):
+    """对当前已选实体（mark=1）调用 AddMate5/4/3，返回 (mate_feature, error_code)。
+
+    调用方负责先选好实体；本函数调用后清空选择。
+    上下限缺省（None）等于标称值；传 0 而标称值非 0 会被 SW 建成极限配合（SW2018 实测）。
+    """
+    dist_upper_m = distance_m if dist_upper_m is None else dist_upper_m
+    dist_lower_m = distance_m if dist_lower_m is None else dist_lower_m
+    angle_upper_deg = angle_deg if angle_upper_deg is None else angle_upper_deg
+    angle_lower_deg = angle_deg if angle_lower_deg is None else angle_lower_deg
+    base = (int(type_code), int(align_code), bool(flip), float(distance_m),
             float(dist_upper_m), float(dist_lower_m),
             int(gear_num), int(gear_den),
             math.radians(float(angle_deg)),
@@ -412,8 +461,9 @@ def add_mate_full(asm, face1, face2, mate_type, align="closest", flip=False,
             continue
         asm.ClearSelection2(True)
         if mate is None:
-            last = RuntimeError(f"{desc}: {method} 返回 None")
-            continue
+            code = int(errors.value)
+            raise RuntimeError(f"{desc}: {method} 未创建配合，错误码 {code}"
+                               f"（{ADD_MATE_ERRORS.get(code, '未知')}）")
         # SW2018 实测：AddMate3 动态返回 CDispatch，包装成 IFeature 后
         # Name 会变成数字；原样返回，Name 读取正常。
         return mate, int(errors.value)
@@ -749,10 +799,9 @@ def move_component(asm, comp, dx_m=0, dy_m=0, dz_m=0):
         arr[9] += float(dx_m)
         arr[10] += float(dy_m)
         arr[11] += float(dz_m)
-        try:
-            xform.ArrayData = arr
-        except Exception:
-            sw_core.com_set(xform, "ArrayData", arr)
+        # SW2018 实测：早绑定直接赋 Python list 会被编组成 VARIANT 数组，SW 读成全零矩阵
+        # （组件被打回原点且旋转丢失）；必须显式 VT_ARRAY|VT_R8。勿加 VT_BYREF（会使 SW 崩溃）。
+        setattr(_dyn(xform), "ArrayData", VARIANT(pythoncom.VT_ARRAY | pythoncom.VT_R8, arr))
     except Exception as exc:
         raise RuntimeError(f"{desc}: 修改 Transform2.ArrayData 失败: {exc}") from exc
     try:
@@ -1361,10 +1410,10 @@ def run_spec(spec):
             flip=m.get("flip", False),
             distance_m=float(m.get("distance_m", 0)),
             angle_deg=float(m.get("angle_deg", 0)),
-            dist_upper_m=float(m.get("dist_upper_m", 0)),
-            dist_lower_m=float(m.get("dist_lower_m", 0)),
-            angle_upper_deg=float(m.get("angle_upper_deg", 0)),
-            angle_lower_deg=float(m.get("angle_lower_deg", 0)),
+            dist_upper_m=(float(m["dist_upper_m"]) if m.get("dist_upper_m") is not None else None),
+            dist_lower_m=(float(m["dist_lower_m"]) if m.get("dist_lower_m") is not None else None),
+            angle_upper_deg=(float(m["angle_upper_deg"]) if m.get("angle_upper_deg") is not None else None),
+            angle_lower_deg=(float(m["angle_lower_deg"]) if m.get("angle_lower_deg") is not None else None),
             gear_num=int(m.get("gear_num", 1)),
             gear_den=int(m.get("gear_den", 1)),
             lock_rotation=m.get("lock_rotation", False),

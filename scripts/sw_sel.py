@@ -92,7 +92,12 @@ def face_info(face):
     try:
         if surf.IsPlane():
             p = surf.PlaneParams  # [法向 xyz, 根点 xyz]（SW2018 实测布局）
-            n = _unit([float(v) for v in p[0:3]])
+            # PlaneParams 的法向是曲面法向，约一半的面与面外法向相反（面与曲面反向）；
+            # IFace2.Normal 才是实体外法向，directional 过滤依赖它。
+            try:
+                n = _unit([float(v) for v in face.Normal])
+            except Exception:
+                n = _unit([float(v) for v in p[0:3]])
             info.update(kind="plane", normal=n,
                         root_mm=[float(v) * 1000.0 for v in p[3:6]])
         elif surf.IsCylinder():
@@ -246,7 +251,11 @@ def collect_faces(model, spec):
             if spec.get("normal") is not None and not _parallel_dir(
                     info["normal"], spec["normal"], directional=bool(spec.get("directional"))):
                 continue
-            if spec.get("root_mm") is not None and not _near(info["root_mm"], spec["root_mm"]):
+            # root_mm：给定点落在该平面上即匹配（SW 的 PlaneParams 根点是平面上任取的一点，
+            # 无法预知，按点相等比较几乎总失败）
+            if spec.get("root_mm") is not None and abs(_dot(
+                    [a - b for a, b in zip(spec["root_mm"], info["root_mm"])],
+                    info["normal"])) > spec.get("tol_mm", 0.01):
                 continue
             if spec.get("min_area_mm2") is not None and info["area_mm2"] < spec["min_area_mm2"]:
                 continue

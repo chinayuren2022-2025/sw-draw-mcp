@@ -396,6 +396,7 @@ def subassembly_manage(file: str = "", op: str = "insert", comp: str = "",
     edit（进入组件编辑模式）。file 为顶层装配体路径；comp 为组件 Name2。"""
     def _f():
         import sw_assembly_full
+        import sw_core
         sw = sw_core.connect()
         asm = sw_core.open_doc(sw, file, doc_type=2) if file else sw.ActiveDoc
         if asm is None:
@@ -411,6 +412,405 @@ def subassembly_manage(file: str = "", op: str = "insert", comp: str = "",
         if op == "edit":
             return {"editing": sw_assembly_full.edit_subassembly(asm, c)}
         raise RuntimeError(f"不支持的 op: {op}")
+    return _call(_f)
+
+
+# ---------------------------------------------------------------------------
+# 文档 / 拓扑 / 闭环验证 / 装配配合（v2 新增）
+#
+# 推荐 AI 工作流：
+#   零件：part_build -> part_topology（看面与持久 ID）-> entity_name 给配合面起名
+#         -> view_capture 看结果 -> dimension_list / dimension_set 改参数
+#   装配：asm_insert -> asm_mate（按"组件+面名"）-> 看返回的 status / remaining_dofs
+#         -> asm_check（欠定义/过定义/干涉）-> view_capture
+# ---------------------------------------------------------------------------
+
+def _doc(file=""):
+    """(sw, IModelDoc2)：file 为路径（自动按扩展名打开）、已打开文档标题，或空=活动文档。"""
+    import sw_core
+    import sw_doc
+    sw = sw_core.connect()
+    if file:
+        if os.path.isfile(file) or os.path.splitext(file)[1]:
+            try:
+                return sw, sw_core._early(sw_doc.find_open(sw, file), "IModelDoc2")
+            except RuntimeError:
+                return sw, sw_doc.open_document(sw, file)
+        return sw, sw_core._early(sw_doc.find_open(sw, file), "IModelDoc2")
+    model = sw.ActiveDoc
+    if model is None:
+        raise RuntimeError("SW 中没有活动文档，请指定 file（路径或已打开文档标题）")
+    return sw, sw_core._early(model, "IModelDoc2")
+
+
+def _is_asm(model):
+    try:
+        return int(model.GetType()) == 2
+    except Exception:
+        return False
+
+
+@mcp.tool()
+def doc_list() -> dict:
+    """列出 SW 中已打开的文档（标题、路径、类型、是否活动、是否有未保存修改）。"""
+    def _f():
+        import sw_core
+        import sw_doc
+        return {"documents": sw_doc.documents(sw_core.connect())}
+    return _call(_f)
+
+
+@mcp.tool()
+def doc_open(path: str) -> dict:
+    """打开 .SLDPRT/.SLDASM/.SLDDRW 并设为活动文档（已打开则直接激活）。"""
+    def _f():
+        import sw_core
+        _, model = _doc(path)
+        return {"title": sw_core.model_title(model), "path": sw_core.model_path(model)}
+    return _call(_f)
+
+
+@mcp.tool()
+def doc_save(file: str = "", path: str = "") -> dict:
+    """保存文档。path 为空则原地保存（新文档必须给 path，扩展名决定类型）。"""
+    def _f():
+        import sw_doc
+        sw, model = _doc(file)
+        return sw_doc.save(sw, model, path)
+    return _call(_f)
+
+
+@mcp.tool()
+def doc_close(file: str = "", save: bool = False) -> dict:
+    """关闭文档（file 为标题或路径，空=活动文档）。save=false 时丢弃未保存修改。"""
+    def _f():
+        import sw_doc
+        sw, model = _doc(file)
+        return sw_doc.close(sw, model, save_first=save)
+    return _call(_f)
+
+
+@mcp.tool()
+def doc_export(path: str, file: str = "") -> dict:
+    """按扩展名导出：.step/.stp/.igs/.stl/.x_t/.x_b/.sat/.3mf/.pdf/.dxf/.dwg/.eprt/.easm。"""
+    def _f():
+        import sw_doc
+        sw, model = _doc(file)
+        return sw_doc.export(sw, model, path)
+    return _call(_f)
+
+
+@mcp.tool()
+def view_capture(file: str = "", view: str = "isometric", width: int = 1200,
+                 height: int = 900, save_to: str = ""):
+    """截取模型视图并直接返回图片，供 AI 目视检查建模结果。
+    view ∈ isometric/front/back/left/right/top/bottom/trimetric/dimetric/current。"""
+    from mcp.server.fastmcp import Image
+
+    def _f():
+        import sw_doc
+        sw, model = _doc(file)
+        return sw_doc.capture(sw, model, view, width, height, save_to)
+    res = _call(_f)
+    if isinstance(res, dict):
+        return res
+    png_path, data = res
+    return [f"{view} 视图：{png_path}", Image(data=data, format="png")]
+
+
+@mcp.tool()
+def feature_list(file: str = "", include_sub: bool = True) -> dict:
+    """列出特征树：名称、类型、压缩状态、错误码；include_sub 含草图等子特征。"""
+    def _f():
+        import sw_doc
+        _, model = _doc(file)
+        return {"features": sw_doc.features(model, include_sub=include_sub)}
+    return _call(_f)
+
+
+@mcp.tool()
+def feature_suppress(name: str, suppress: bool = True, file: str = "") -> dict:
+    """压缩/解压缩特征（可逆；排查问题优先用它而不是删除）。"""
+    def _f():
+        import sw_doc
+        _, model = _doc(file)
+        return sw_doc.suppress_feature(model, name, suppress)
+    return _call(_f)
+
+
+@mcp.tool()
+def feature_delete(name: str, file: str = "", keep_absorbed: bool = False) -> dict:
+    """删除特征（默认连同其草图）；返回实际被删除的全部特征（含级联删除的子特征）。"""
+    def _f():
+        import sw_doc
+        _, model = _doc(file)
+        return sw_doc.delete_feature(model, name, keep_absorbed)
+    return _call(_f)
+
+
+@mcp.tool()
+def undo(count: int = 1, file: str = "") -> dict:
+    """撤销最近 count 步操作，返回撤销前后特征数以确认是否生效。"""
+    def _f():
+        import sw_doc
+        _, model = _doc(file)
+        return sw_doc.undo(model, count)
+    return _call(_f)
+
+
+@mcp.tool()
+def dimension_list(file: str = "", feature: str = "") -> dict:
+    """列出尺寸全名与当前值（mm / deg），如 D1@草图1；feature 可限定某个特征。"""
+    def _f():
+        import sw_doc
+        _, model = _doc(file)
+        return {"dimensions": sw_doc.dimensions(model, feature or None)}
+    return _call(_f)
+
+
+@mcp.tool()
+def dimension_set(name: str, value: float, file: str = "") -> dict:
+    """按全名修改尺寸并重建；长度单位 mm、角度单位 deg（按尺寸类型自动判断）。"""
+    def _f():
+        import sw_doc
+        _, model = _doc(file)
+        return sw_doc.set_dimension(model, name, value)
+    return _call(_f)
+
+
+@mcp.tool()
+def custom_properties(file: str = "", props: dict = None, config: str = "") -> dict:
+    """读/写文件自定义属性（props 为 {名称: 值} 时写入，否则只读）。config 为空=文件级。"""
+    def _f():
+        import sw_doc
+        _, model = _doc(file)
+        if props:
+            return sw_doc.set_custom_properties(model, props, config)
+        return {"properties": sw_doc.custom_properties(model, config)}
+    return _call(_f)
+
+
+@mcp.tool()
+def part_topology(file: str = "", kind: str = "", include_edges: bool = False,
+                  limit: int = 200) -> dict:
+    """列出零件的面（及边）：类型、法向/轴/半径、面积、包围盒、名字、persist_id。
+    persist_id / name 可用于 entity_name、measure、asm_mate 等工具的 ref，
+    重建后依然有效（比 Face<n> 或坐标稳定）。kind 过滤 plane/cylinder/cone/sphere/torus。"""
+    def _f():
+        import sw_topo
+        _, model = _doc(file)
+        include = ("faces", "edges") if include_edges else ("faces",)
+        return sw_topo.topology(model, include=include, kind=kind or None, limit=limit)
+    return _call(_f)
+
+
+@mcp.tool()
+def entity_name(ref: dict, name: str, file: str = "", save: bool = True) -> dict:
+    """给零件的面/边/顶点起名（存入零件文件），之后装配中用 {"component":..,"face":name} 引用。
+    ref 任选：{"persist_id":..} / {"spec":{"kind":"cylinder","radius_mm":5}} /
+    {"ray":{"origin_mm":[0,0,50],"direction":[0,0,-1]}} / {"index":3}。
+    spec 平面示例：{"kind":"plane","normal":[0,0,1],"directional":true,"root_mm":[0,0,10]}
+    （normal 是实体外法向；root_mm 是平面上任一点）。"""
+    def _f():
+        import sw_doc
+        import sw_topo
+        sw, model = _doc(file)
+        ent, kind = sw_topo.resolve(model, ref)
+        sw_topo.name_entity(model, ent, name)
+        out = {"named": name, "kind": kind, "persist_id": sw_topo.persist_id(model, ent)}
+        if save:
+            out.update(sw_doc.save(sw, model))
+        return out
+    return _call(_f)
+
+
+@mcp.tool()
+def measure(ref1: dict, ref2: dict = None, file: str = "") -> dict:
+    """测量（IMeasure）：距离/法向距离/中心距/角度/半径/面积/平行/垂直等。
+    零件中 ref 同 entity_name；装配中 ref 同 asm_mate（{"component":..,"face":..}）。"""
+    def _f():
+        import sw_asm_ref
+        import sw_topo
+        _, model = _doc(file)
+        if _is_asm(model):
+            ents = []
+            for r in [ref1] + ([ref2] if ref2 else []):
+                how, obj, desc = sw_asm_ref.resolve(model, r)
+                if how != "entity":
+                    raise RuntimeError(f"测量暂不支持基准面/轴引用：{desc}")
+                ents.append(obj)
+            return sw_topo.measure_entities(model, ents)
+        return sw_topo.measure(model, ref1, ref2)
+    return _call(_f)
+
+
+@mcp.tool()
+def mass_properties(file: str = "") -> dict:
+    """体积(mm³)/表面积/质量/密度/质心(mm)/包围盒，零件或装配体均可。用于建模后验证。"""
+    def _f():
+        import sw_topo
+        _, model = _doc(file)
+        return sw_topo.mass(model)
+    return _call(_f)
+
+
+@mcp.tool()
+def asm_new(save: str = "") -> dict:
+    """新建空装配体（save 给路径则立即保存）。"""
+    def _f():
+        import sw_assembly
+        import sw_core
+        import sw_doc
+        sw = sw_core.connect()
+        asm = sw_core._early(sw_assembly.new_assembly(sw), "IModelDoc2")
+        out = {"title": sw_core.model_title(asm)}
+        if save:
+            out.update(sw_doc.save(sw, asm, save))
+        return out
+    return _call(_f)
+
+
+@mcp.tool()
+def asm_insert(path: str, at_mm: list = [0, 0, 0], place: str = "origin",
+               fix: bool = None, file: str = "") -> dict:
+    """插入零件/子装配。place="origin"：零件原点精确落在 at_mm（推荐）；
+    "bbox_center"：SW 原生语义（包围盒中心落在 at_mm）。第一个组件默认被 SW 固定。
+    返回组件名（后续 ref 用）、约束状态、原点、包围盒。"""
+    def _f():
+        import sw_asm_ref
+        _, asm = _doc(file)
+        return sw_asm_ref.insert_component(asm, path, at_mm, place, fix)
+    return _call(_f)
+
+
+@mcp.tool()
+def asm_components(file: str = "", top_level: bool = True) -> dict:
+    """列出组件：名称、路径、固定、约束状态（under/fully/over_constrained）、
+    剩余自由度（转轴/平移方向）、原点与旋转矩阵、包围盒、配合数。"""
+    def _f():
+        import sw_asm_ref
+        _, asm = _doc(file)
+        return {"components": sw_asm_ref.assembly_components(asm, top_level)}
+    return _call(_f)
+
+
+@mcp.tool()
+def asm_component_faces(component: str, file: str = "", kind: str = "",
+                        include_edges: bool = False, limit: int = 200) -> dict:
+    """列出组件的面（装配坐标）：类型、法向/轴、半径、包围盒、名字、persist_id。
+    用返回的 name 或 persist_id 写 asm_mate 的 ref。kind 过滤 plane/cylinder/...。"""
+    def _f():
+        import sw_asm_ref
+        _, asm = _doc(file)
+        return sw_asm_ref.comp_faces(asm, component, kind or None, limit, include_edges)
+    return _call(_f)
+
+
+@mcp.tool()
+def asm_mate(a: dict, b: dict, mate_type: str = "coincident", align: str = "closest",
+             flip: bool = False, distance_mm: float = 0, angle_deg: float = 0,
+             extra: list = None, rollback_on_error: bool = True, file: str = "") -> dict:
+    """闭环配合：选择 -> 配合 -> 重建 -> 返回两端组件的约束状态与剩余自由度。
+    ref 写法（a/b）：
+      {"component":"pin-1","face":"PIN_CYL"}   零件中已命名的面（entity_name），最稳
+      {"component":"pin-1","persist_id":".."}  asm_component_faces 返回的 ID
+      {"component":"pin-1","plane":"front"}    组件基准面 front/top/right/自定义名
+      {"component":"pin-1","axis":"基准轴1"} / {"component":"pin-1","point":"origin"}
+      {"component":"pin-1","spec":{"kind":"cylinder","radius_mm":5}}（零件局部坐标）
+      {"plane":"front"}                        装配体自身基准面
+    mate_type: coincident/concentric/perpendicular/parallel/tangent/distance/angle/
+      symmetric/width/gear/rack_pinion/screw/lock/hinge/slot/slider/path/...
+    align: aligned/anti/closest；distance_mm/angle_deg 仅距离/角度配合用。
+    extra: [{"ref":{..},"mark":2}] 对称面等第三选择。
+    过定义/冲突时返回 ok=false 并自动删除该配合（rollback_on_error）。"""
+    def _f():
+        import sw_asm_ref
+        _, asm = _doc(file)
+        return sw_asm_ref.mate(asm, a, b, mate_type, align, flip, distance_mm, angle_deg,
+                               extra, rollback_on_error)
+    return _call(_f)
+
+
+@mcp.tool()
+def asm_mates(file: str = "") -> dict:
+    """列出全部配合：类型、对齐、翻转、两端组件与实体类型、数值(mm/deg)、错误码、压缩状态。"""
+    def _f():
+        import sw_asm_ref
+        _, asm = _doc(file)
+        return {"mates": sw_asm_ref.mates(asm)}
+    return _call(_f)
+
+
+@mcp.tool()
+def asm_mate_edit(name: str, distance_mm: float = None, angle_deg: float = None,
+                  flip: bool = None, file: str = "") -> dict:
+    """修改配合的距离/角度值或翻转方向，重建后返回新的配合详情。"""
+    def _f():
+        import sw_asm_ref
+        _, asm = _doc(file)
+        return sw_asm_ref.edit_mate(asm, name, distance_mm, angle_deg, flip)
+    return _call(_f)
+
+
+@mcp.tool()
+def asm_mate_delete(name: str, file: str = "") -> dict:
+    """删除配合。"""
+    def _f():
+        import sw_assembly_full
+        import sw_core
+        _, asm = _doc(file)
+        sw_assembly_full.delete_mate(asm, name)
+        sw_core.rebuild(asm)
+        return {"deleted": name}
+    return _call(_f)
+
+
+@mcp.tool()
+def asm_mate_suppress(name: str, suppress: bool = True, file: str = "") -> dict:
+    """压缩/解压缩配合（可逆，用于排查哪条配合导致冲突）。"""
+    def _f():
+        import sw_assembly_full
+        import sw_core
+        _, asm = _doc(file)
+        ok = sw_assembly_full.suppress_mate(asm, name, suppress)
+        sw_core.rebuild(asm)
+        return {"mate": name, "suppressed": suppress, "ok": ok}
+    return _call(_f)
+
+
+@mcp.tool()
+def asm_move(component: str, delta_mm: list = None, to_mm: list = None,
+             file: str = "") -> dict:
+    """平移组件：delta_mm 相对移动，或 to_mm 把零件原点移到指定位置。
+    组件受配合约束时由求解器决定最终位置（返回实际原点）。"""
+    def _f():
+        import sw_asm_ref
+        _, asm = _doc(file)
+        return sw_asm_ref.move_component(asm, component, delta_mm, to_mm)
+    return _call(_f)
+
+
+@mcp.tool()
+def asm_fix(component: str, fixed: bool = True, file: str = "") -> dict:
+    """固定 / 浮动组件。"""
+    def _f():
+        import sw_asm_ref
+        import sw_assembly_full as af
+        _, asm = _doc(file)
+        comp = sw_asm_ref.find_comp(asm, component)
+        (af.fix_component if fixed else af.float_component)(asm, comp)
+        return sw_asm_ref.comp_info(asm, comp)
+    return _call(_f)
+
+
+@mcp.tool()
+def asm_check(file: str = "", interference: bool = True) -> dict:
+    """装配闭环检查：重建、配合错误、欠定义组件(floating)、过定义组件、精确干涉、What's Wrong。
+    ok=true 表示无错误、无过定义、无干涉（欠定义不算错误，单独列在 floating）。"""
+    def _f():
+        import sw_asm_ref
+        _, asm = _doc(file)
+        return sw_asm_ref.check(asm, with_interference=interference)
     return _call(_f)
 
 
